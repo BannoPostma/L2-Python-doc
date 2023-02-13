@@ -4,8 +4,8 @@
 
 ## Python Files
 <p>
-    The Python files are the <a href="/state/">state.py</a>, <a href="/state_machine/">state_machine.py</a>, and
-    <a href="/visualization/">visualization.py</a>. <br>
+    The Python files are the <a href="state/">state.py</a>, <a href="state_machine/">state_machine.py</a>, and
+    <a href="visualization/">visualization.py</a>. <br>
     The state.py file contains the State Class and Predicate Class. <br>
     The State Class consists of all functions and variables relevant for a state. Examples include a function to add
     a predicate to a state and the variable predicates, in which all predicates that exist in a state are stored. <br>
