@@ -18,7 +18,7 @@
     </p>
     <li>create_predicate_dict(self, predicates)</li>
     <p>
-        This function creates a dictionary from the <a href="text_files.html">predicates.txt file</a> of all predicates.
+        This function creates a dictionary from the <a href="../text_files/">predicates.txt file</a> of all predicates.
     </p>
     <li>filter_sort_values(sort)</li>
     <p>
@@ -26,7 +26,7 @@
     </p>
     <li>sort_sorts(self, sorts)</li>
     <p>
-        This function creates a dictionary from the <a href="text_files.html">sorts.txt file</a> of all sorts.
+        This function creates a dictionary from the <a href="../text_files/">sorts.txt file</a> of all sorts.
     </p>
     <li>create_states(self)</li>
     <p>
@@ -41,7 +41,7 @@
     </p>
     <li>fill_states(self, scenario)</li>
     <p>
-        This function fills the states, solely on the basis of the <a href="text_files.html">scenarios.txt file</a>
+        This function fills the states, solely on the basis of the <a href="../text_files/">scenarios.txt file</a>
     </p>
     <li>show_debug_info(self)</li>
     <p>
@@ -93,7 +93,7 @@
     </p>
     <li>rules</li>
     <p>
-        A list of functions which are executed for every timestep. The rules are defined in the <a href="jupyter.html">Jupyter Notebook</a>.
+        A list of functions which are executed for every timestep. The rules are defined in the <a href="../jupyter/">Jupyter Notebook</a>.
     </p>
     <li>predicates</li>
     <p>

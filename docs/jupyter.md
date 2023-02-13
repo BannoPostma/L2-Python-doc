@@ -22,20 +22,20 @@ Jupyter Notebook
 <h3>Sorts</h3>
 <p>
     Before you define any sorts, you should write the line "%%writefile sorts.txt" (this should already be there). After
-    writing this line, you should define a sort per line, using the manner described <a href="/text_files/">here</a>.
+    writing this line, you should define a sort per line, using the manner described <a href="../text_files/">here</a>.
 </p>
 
 <h3>Predicates</h3>
 <p>
     Before you define any predicate, you should write the line "%%writefile sorts.txt" (this should already be there). After
-    writing this line, you should define a predicate per line, using the manner described <a href="/text_files/">here</a>.
+    writing this line, you should define a predicate per line, using the manner described <a href="../text_files/">here</a>.
 </p>
 
 <h3>Scenario</h3>
 
 <p>
     Before you define any predicate, you should write the line "%%writefile scenarios.txt" (this should already be there). After
-    writing this line, you should define a predicate per line, using the manner described <a href="/text_files/">here</a>.
+    writing this line, you should define a predicate per line, using the manner described <a href="../text_files/">here</a>.
 </p>
 
 <h3>Rules</h3>
