@@ -9,8 +9,9 @@ plugins:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
         python:
+          paths: [L2/base]
           options:
-            docstring_style: sphinx
+            docstring_style: google
 markdown_extensions:
   - markdown_include.include:
       base_path: .
