@@ -13,8 +13,8 @@
     </ul>
 </p>
 
-[Full image](Schematic overview.png)
-![image](Schematic overview.png)
+[Full image](Visual.png)
+![image](Visual.png)
 
 
 
