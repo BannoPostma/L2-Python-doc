@@ -2,25 +2,55 @@
     The state_machine is the force behind creating and defining each state
     """
 
-from state import Predicate
-from state import State
-from visualization import run_visualization
+from .state import Predicate, State
+from .visualization import run_visualization
 import re
+from prettytable import PrettyTable
 
+INF = "inf"
 
 class StateMachine:
-    def __init__(self, predicates, sorts, scenario, max_t, rules):
+
+    def __init__(self, max_t = 50):
         """
             scenario = the scenario defined by the user
             max_t = the maximum time step the StateMachine will run to
             states = pre-made list of empty states
         """
         self.max_t = max_t
-        self.rules = rules
-        self.predicates = self.create_predicate_dict(predicates)
-        self.sorts = self.sort_sorts(sorts)
+        self.rules = []
+        self._predicates = None
+        self._sorts = None
+        self._states = None
+
+    @property
+    def predicates(self):
+        return self._predicates
+
+    @predicates.setter
+    def predicates(self, predicates):
+        self._predicates = predicates
+        self.show_debug_info_predicates()
+
+    @property
+    def sorts(self):
+        return self._sorts
+    
+    @sorts.setter
+    def sorts(self, sorts):
+        self._sorts = sorts
+        self.show_debug_info_sorts()
+
+    @property
+    def scenario(self):
+        return self._scenario
+    
+    @scenario.setter
+    def scenario(self, scenario):
         self.states = self.create_states()
         self.fill_states(scenario)
+        self._scenario = scenario
+
 
     @staticmethod
     def filter_predicate_sorts(predicate):
@@ -122,79 +152,138 @@ class StateMachine:
                 print("Expected sort: %s, got a different sort (with value %s), for predicate %s, "
                       "when loading the scenario file" % (sorts_of_pred[-1], value, predicate_name))
 
+
     def fill_states(self, scenario):
         """
             fill states based on solely the scenario file
         """
-        scenario = open(scenario, "r").read().splitlines()
-        scenario = [line for line in scenario if line != ""]
+        
         for predicate in scenario:
-            predicate = predicate.split(";")
             time_steps = predicate[-1]
-            predicate = predicate[0]
-            if predicate[-2:] == "}}":
-                predicate, agent, value = self.filter_nested_predicate_info(predicate)
+            if type(predicate[1]) == tuple:
+                predicates, agent, value = self.filter_nested_predicate_info(predicate)
             else:
-                predicate, agent, value = self.filter_predicate_info(predicate)
+                agent, value = self.filter_predicate_info(predicate[1])
+                predicates = [predicate[0]]
             start_time, end_time = self.filter_predicate_time(time_steps)
-            self.check_validity_pred(predicate, agent, value)
-            self.insert_predicate(predicate, agent, value, start_time, end_time)
+            self.check_validity_pred(predicates, agent, value)
+            self.insert_predicate(predicates, agent, value, start_time, end_time)
 
     def show_debug_info(self):
         """
             print debug information (defined sorts & defined predicates)
         """
-        print("##################Debug mode activated##################")
-        print("The StateMachine contains the following defined sorts, besides BOOLEAN and REAL: ")
-        print("\t" + ", ".join(self.sorts) + "\n")
-        print("The StateMachine contains the predicates with their corresponding sorts: ")
+        print("The StateMachine runs in Debug mode!\n")
+
+        # create the pretty table of sorts and predicates
+        sorts_table = PrettyTable()
+        predicates_table = PrettyTable()
+
+        # adding the field names of the table
+        sorts_table.field_names = ["Sort name", "Sort values"]
+        predicates_table.field_names = ["Predicate name", "Sorts"]
+
+        # filling the sort table
+        for sort in self.sorts:
+            sorts_table.add_row([sort, ", ".join(self.sorts[sort].copy())])
+
+        # filling the predicate table
         for predicate in self.predicates:
-            print("\tPredicate name: %s, predicate sorts (index dependent): " % predicate, end="")
-            print(self.predicates[predicate])
-        print("##################Debug report per state##################\n")
+            predicates_table.add_row([predicate, str(self.predicates[predicate])])
+        
+        print("The StateMachine contains the following defined sorts, besides BOOLEAN and REAL: ")
+        print(sorts_table)
+
+        print("\nThe StateMachine contains the following predicates with their corresponding sorts: ")
+        print(predicates_table)
+
+    def show_debug_info_sorts(self):
+        """
+            print debug information (defined sorts & defined predicates)
+        """
+        
+
+        # create the pretty table of sorts and predicates
+        sorts_table = PrettyTable()
+        
+
+        # adding the field names of the table
+        sorts_table.field_names = ["Sort name", "Sort values"]
+        
+
+        # filling the sort table
+        for sort in self.sorts:
+            sorts_table.add_row([sort, ", ".join(self.sorts[sort].copy())])
+        
+        print("The StateMachine contains the following defined sorts, besides BOOLEAN and REAL: ")
+        print(sorts_table)
+
+    def show_debug_info_predicates(self):
+        """
+            print debug information (defined sorts & defined predicates)
+        """
+        
+
+        # create the pretty table of sorts and predicates
+        predicates_table = PrettyTable()
+
+        # adding the field names of the table
+        predicates_table.field_names = ["Predicate name", "Sorts"]
+
+        # filling the predicate table
+        for predicate in self.predicates:
+            predicates_table.add_row([predicate, str(self.predicates[predicate])])
+        
+        print("\nThe StateMachine contains the following predicates with their corresponding sorts: ")
+        print(predicates_table)
+        
+        unique_sorts = set()
+
+        for sorts in self.predicates.values():
+            for sort in sorts:
+                unique_sorts.add(sort)
+
+        unique_sorts = unique_sorts.difference({"BOOLEAN", "REAL"})
+
+        for sort in unique_sorts:
+            if sort not in self.sorts:
+                print("Warning: sort %s is not defined in sorts" % sort)
 
     def run(self, debug_mode=False):
         """
             run all rules that are inside the rules.py file
         """
+        
+        self.states = self.create_states()
+        self.fill_states(self._scenario)
+
         if debug_mode:
             self.show_debug_info()
-            self.states[0].show_info()
+            # create the pretty table of states
+            states_table = PrettyTable()
+
+            # adding the field names of the table
+            states_table.field_names = ["Time", "Predicate", "Agent(s)", "Value(s)"]
+
+            self.states[0].show_info(states_table)
         for t in range(1, self.max_t):
             # execute all rules and create all predicates for state t
             for rule in self.rules:
                 rule(self.states[:t + 1], t)
             if debug_mode:
-                self.states[t].show_info()
+                self.states[t].show_info(states_table)
+        if debug_mode:
+            print("\nThe StateMachine contains the following information per state: ")
+            print(states_table)
 
+    
     def filter_nested_predicate_info(self, predicate):
         """
             filters predicate information from a predicate from the scenarios file
         """
-        predicate_re = re.search("{([^}]+)}", predicate)
-        predicate_re = predicate_re.group(1).split(",")
-        # delete whitespaces in names of agents in case of multiple agents
-        agent_and_value = [inf.strip() for inf in predicate_re]
-        nested_pred = agent_and_value[0].split("{")[0]
-        # agents are till the last item
-        agent_and_value[0] = agent_and_value[0].split("{")[1]
-        agents = [agent for agent in agent_and_value if agent in self.sorts["AGENT"]]
-        values = [value for value in agent_and_value if value not in agents]
-        agents = [agent.strip() for agent in agents]
-        name_predicate = predicate.split("{")[0]
-        # if the value is a boolean / real number, make it a float, in order to use it in the rules
-        for i in range(len(values)):
-            try:
-                values[i] = float(values[i])
-            except ValueError:
-                # check if the value is a Boolean. If so --> change it
-                if values[i].lower() == "true":
-                    values[i] = True
-                elif values[i].lower() == "false":
-                    values[i] = False
-        name_predicate = [name_predicate, nested_pred]
-        if len(values) == 1:
-            values = values[0]
+        name_predicate = [predicate[0], predicate[1][0]]
+        agents = predicate[1][1][:-1]
+        values = predicate[1][1][-1]
         return [name_predicate, agents, values]
 
     @staticmethod
@@ -202,49 +291,28 @@ class StateMachine:
         """
             filters predicate information from a predicate from the scenarios file
         """
-        predicate_re = re.search("{([^}]+)}", predicate)
-        predicate_re = predicate_re.group(1).split(",")
-        # delete whitespaces in names of agents in case of multiple agents
-        agent_and_value = [inf.strip() for inf in predicate_re]
-        # agents are till the last item
-        agents = agent_and_value[:-1]
-        agents = [agent.strip() for agent in agents]
+        
+        agents = predicate[:-1]
         # value is the last item
-        values = agent_and_value[-1].split()
-        name_predicate = predicate.split("{")[0]
-        # if the value is a boolean / real number, make it a float, in order to use it in the rules
-        for i in range(len(values)):
-            try:
-                values[i] = float(values[i])
-            except ValueError:
-                # check if the value is a Boolean. If so --> change it
-                if values[i].lower() == "true":
-                    values[i] = True
-                elif values[i].lower() == "false":
-                    values[i] = False
-        name_predicate = [name_predicate]
-        if len(values) == 1:
-            values = values[0]
-        return [name_predicate, agents, values]
+        value = predicate[-1]
+        return [agents, value]
+
 
     def filter_predicate_time(self, time):
         """
             filters predicate duration from a predicate from the scenarios file
             start_time = start_time - 1, since index starts from 0
         """
-        time = time.split("[")
-        time = (time[1].split("]"))[0]
         if len(time) == 1:
             # just 1 time point
             start_time, end_time = int(time[0]) - 1, int(time[0])
         else:
             # range of time points
-            time = time.split(":")
-            start_time = int(time[0]) - 1
-            if time[-1].lower() == "inf":
+            start_time = time[0] - 1
+            if time[-1] == INF:
                 end_time = self.max_t
             else:
-                end_time = int(int(time[-1]))
+                end_time = int(time[-1])
         return [start_time, end_time]
 
     def insert_single_predicate(self, predicate, agent, value, start_time, end_time):

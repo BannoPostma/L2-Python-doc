@@ -1,7 +1,7 @@
 """ state.py
     Contains the information of a state at a certain times tep
     """
-
+import inspect
 
 class State:
     def __init__(self, t, possible_predicates, sorts):
@@ -13,6 +13,13 @@ class State:
         self.predicates = {}
         self.possible_predicates = possible_predicates
         self.sorts = sorts
+
+    def __str__(self):
+        return f"State {self.t}: {self.predicates}"
+
+    def __repr__(self) -> str:
+        p = "\n".join(self.predicates)
+        return f"State {self.t}: {p}"
 
     def check_predicate(self, predicate):
         """
@@ -52,6 +59,32 @@ class State:
             print("The possible predicates in the state with time %d are: " % self.t, end="")
             print(", ".join(self.predicates))
             return []
+
+
+    def get_single_predicate_by_agent(self, predicate, agent, index=0):
+        """
+        returns a list of all predicate entries with a certain agent at the given index
+        """
+        if self.get_predicate(predicate) != []:
+            output = []
+            for entry in self.predicates[predicate]:
+                if agent == entry.agents[index]:
+                    output.append(entry)
+            if self.get_predicate(predicate) != []:
+                if len(output) > 1:
+                    print("Warning: The predicate \"%s\", with agent \"%s\", on index \"%d\", is found multiple times in the state with time %d" % (predicate, agent, index, self.t))
+                    print("If this is your intention, please use the get_predicate_by_agent function instead of the get_single_predicate_by_agent function")
+                return output[0]
+            else:
+                print("Warning: The predicate \"%s\", with agent \"%s\", on index \"%d\", is not found in the state with time %d" % (predicate, agent, index, self.t))
+                print("Please check the spelling of the predicate and the agent, or the index, or use the debug function")
+                return []
+        else:
+            print("Warning: The predicate \"%s\" is not found in the state with time %d" % (predicate, self.t))
+            print("The possible predicates in the state with time %d are: " % self.t, end="")
+            print(", ".join(self.predicates))
+            return []
+
 
     def check_validity_pred(self, predicate_name, agent, value, func_name):
         """
@@ -93,11 +126,11 @@ class State:
             return False
         return True
 
-    def add_predicate_to_state(self, predicate, func_name):
+    def add_predicate_to_state(self, predicate):
         """
         adds a predicate to a state
         """
-        if self.check_validity_pred(predicate.name, predicate.agents, predicate.value, func_name):
+        if self.check_validity_pred(predicate.name, predicate.agents, predicate.value, inspect.stack()[1][3]):
             # the predicate (name) already exists in the state
             if predicate.name in self.predicates:
                 # only add the predicate to the list
@@ -190,32 +223,39 @@ class State:
                 return True
         return False
 
-    @staticmethod
-    def show_pred_info(predicate):
+    def show_info(self, table):
         """
-        shows the information about a predicate
+        add info to the states table
         """
-        print("\tThe predicate %s, with agents: " % predicate.name, end="")
-        print(", ".join(predicate.agents), end="")
-        print(", and value ", end="")
-        print(predicate.value)
-
-    def show_info(self):
-        """
-        shows all the predicates that are in the state
-        """
-        print("This state, state %d, contains the following predicates: " % self.t)
+        first_t = True
         for predicate in self.predicates:
+            first_pred = True
             if type(self.predicates[predicate]) != dict:
                 for predicate_info in self.predicates[predicate]:
-                    self.show_pred_info(predicate_info)
+                    values = ", ".join(predicate_info.value.copy()) if type(predicate_info.value) == list else predicate_info.value
+                    if first_pred:
+                        if first_t:
+                            table.add_row([self.t, predicate_info.name, ", ".join(predicate_info.agents), values])
+                            first_t, first_pred = False, False
+                        else:
+                            table.add_row(["", predicate_info.name, ", ".join(predicate_info.agents), values])
+                            first_pred = False
+                    else:
+                        table.add_row(["", "", ", ".join(predicate_info.agents), values])
             else:
-                print("The nested \"%s\" predicate, containing the following nested predicates: " %predicate)
                 for nested_pred in self.predicates[predicate]:
+                    first_pred = True
                     for predicate_info in self.predicates[predicate][nested_pred]:
-                        self.show_pred_info(predicate_info)
-                print("End of information about the nested \"%s\" predicate\n" %predicate)
-        print("")
+                        values = ", ".join(predicate_info.value.copy()) if type(predicate_info.value) == list else predicate_info.value
+                        if first_pred:
+                            if first_t:
+                                table.add_row([self.t, predicate + ": " + predicate_info.name, ", ".join(predicate_info.agents), values])
+                                first_t, first_pred = False, False
+                            else:
+                                table.add_row(["", predicate + ": " + predicate_info.name, ", ".join(predicate_info.agents), values])
+                                first_pred = False
+                        else:
+                            table.add_row(["", "", ", ".join(predicate_info.agents), values])
 
 
 class Predicate:
@@ -236,3 +276,10 @@ class Predicate:
 
     def print(self):
         return str(self.agents) + str(self.value)
+    
+    def __str__(self):
+        return f"{self.name}({', '.join(self.agents)}) = {self.value}"
+    
+    def __iter__(self):
+        return iter(self.agents + [self.value])
+    

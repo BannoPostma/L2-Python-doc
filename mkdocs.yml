@@ -9,7 +9,7 @@ plugins:
       handlers:
         # See: https://mkdocstrings.github.io/python/usage/
         python:
-          paths: [L2/base]
+          paths: [L2/l2]
           options:
             docstring_style: google
 markdown_extensions:

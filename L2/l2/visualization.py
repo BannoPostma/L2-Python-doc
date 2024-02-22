@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 
 random.seed(42)
+np.random.seed(42)
 
 
 def make_visualization_dic(state_machine):
@@ -151,28 +152,40 @@ def make_bar_plot(predicate_name, predicates, sort, sorts):
         _, values = zip(*predicates[predicate])
         row = [possibilities.index(value) for value in values]
         result_matrix.append(row)
+    legend_possibilities = possibilities
+    legend_colors = color
     # if there is no None, but still grey color in the cmap --> delete it (else bug)
     if not(any(0 in row for row in result_matrix)):
         color.pop(0)
         possibilities.pop(0)
+        if len(np.unique(np.array(result_matrix).squeeze())) == 1:
+            possibilities = [possibilities[np.array(result_matrix).squeeze()[0] - 1]]
+            color = [color[np.array(result_matrix).squeeze()[0] - 1]]
+    # Hardcoded but fixed the True False bug...
+    elif possibilities == [None, True, False] and len(np.unique(np.array(result_matrix).squeeze())) == 2:
+        items = np.unique(np.array(result_matrix).squeeze())
+        possibilities = [possibilities[i] for i in items]
+        color = [color[i] for i in items]
     color_dict = {str(possibilities[i]) : color[i] for i in range(0, len(possibilities))}
+    legend_color_dict = {str(legend_possibilities[i]) : legend_colors[i] for i in range(0, len(legend_possibilities))}
     cmap = ListedColormap(color)
     matfig = plt.figure(figsize=(8,8))
+
     plt.matshow(result_matrix, cmap=cmap, fignum=matfig.number)
     plt.xlabel("Time Steps")
     # show the x labels
     plt.xticks(np.arange(-0.5, len(result_matrix[0]), step=1), ha="right", labels=range(len(result_matrix[0]) + 1))
     # show the y labels
     plt.yticks(np.arange(len(names)), names)
-    plt.legend(labels=possibilities)
+    plt.legend(legend_color_dict)
     # make a clear grid
     for i in range(len(names)):
         plt.axhline(i + 0.5, color='k')
     plt.grid(axis='x', color='k', linewidth=2)
     plt.title("Predicates of predicate \"%s\"" % predicate_name)
     patches = []
-    for key in color_dict:
-        patch = mpatches.Patch(color=color_dict[key], label=key)
+    for key in legend_color_dict:
+        patch = mpatches.Patch(color=legend_color_dict[key], label=key)
         patches.append(patch)
     plt.legend(handles=patches, bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
     fig = plt.gcf()
