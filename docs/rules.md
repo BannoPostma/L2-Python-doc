@@ -1,11 +1,11 @@
-# Sorts
+# Rules
 
 Every rule typically consists of three parts:
 - fetching the required information from the previous time step
 - computing the new value for the current time step
 - adding the new value to the simulation log (the states)
 
-## Define Sorts
+## Define Rules
 
 ```python
 def calculating_middle(states, t):
